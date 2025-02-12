@@ -3,10 +3,10 @@ import os
 import time
 
 from dotenv import load_dotenv
-from elevenlabs import generate, play, set_api_key, Voice, VoiceSettings
+from elevenlabs.client import ElevenLabs
+from elevenlabs import play
 from openai import OpenAI
 from PIL import ImageGrab
-import pygame
 
 SCREENSHOTS_FOLDER_NAME = "screenshots"
 AUDIO_FILES_FOLDER_NAME = "audio"
@@ -16,9 +16,8 @@ NARRATOR = "Sir David Attenborough"
 DOCUMENTARY_TYPE = "Nature"
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-set_api_key(os.environ.get("ELEVENLABS_API_KEY"))
-pygame.init()
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+elevenlabs_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
 
 
 def take_screenshot(order_number: int) -> str:
@@ -53,7 +52,7 @@ def generate_new_line(base64_image: str) -> list[dict]:
 
 
 def analyze_image(base64_image: str, script: list[dict]) -> str:
-    response = client.chat.completions.create(
+    response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {
@@ -72,35 +71,8 @@ def analyze_image(base64_image: str, script: list[dict]) -> str:
 
 
 def play_audio(text: str) -> None:
-    audio = generate(
-        text=text,
-        # voice=Voice(
-        #     voice_id="fTa66eq1WTYWiITP51ZV",
-        #     settings=VoiceSettings(
-        #         stability=0.6, similarity_boost=0.2, style=0.8, use_speaker_boost=True
-        #     ),
-        # ),
-    )
-
+    audio = elevenlabs_client.generate(text=text)
     play(audio)
-
-
-# def generate_audio(text: str, order_number: int) -> str:
-#     audio_file_path = os.path.join(
-#         os.getcwd(), AUDIO_FILES_FOLDER_NAME, f"{order_number}_audio.mp3"
-#     )
-#     response = client.audio.speech.create(model="tts-1", voice="fable", input=text)
-
-#     response.stream_to_file(audio_file_path)
-
-#     return audio_file_path
-
-
-# def play_audio(audio_file_path: str) -> None:
-#     my_sound = pygame.mixer.Sound(audio_file_path)
-#     my_sound.play()
-#     # prevent the audio overlaps
-#     time.sleep((my_sound.get_length() // 2) + 1.5)
 
 
 def main() -> None:
@@ -120,10 +92,6 @@ def main() -> None:
 
         print(f"🎙️ {NARRATOR} says:")
         print(analysis)
-
-        # audio_file_path = generate_audio(analysis, order_number=counter)
-
-        # play_audio(audio_file_path=audio_file_path)
 
         play_audio(analysis)
 
