@@ -37,31 +37,29 @@ def encode_image(image_path: str) -> str:
 
 
 def generate_new_line(base64_image: str) -> list[dict]:
-    return [
-        {
+    return [{
             "role": "user",
             "content": [
                 {
                     "type": "text",
-                    "text": f"Describe this image.",
+                    "text": "What is in this image?",
                 },
                 {
                     "type": "image_url",
-                    "image_url": f"data:image/jpeg;base64,{base64_image}",
+                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
                 },
             ],
-        },
-    ]
+        }]
 
 
 def analyze_image(base64_image: str, script: list[dict]) -> str:
     response = client.chat.completions.create(
-        model="gpt-4-vision-preview",
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "system",
                 "content": f"You are {NARRATOR}. Narrate the screenshots from a software developer as if it is a {DOCUMENTARY_TYPE} documentary. "
-                "Make it snarky and funny. Don't repeat yourself. Make it short. If I do anything remotely interesting, make a big deal about it! "
+                "Make it snarky and funny. Don't repeat yourself. Make it short. "
                 "Limit your output to maximum two sentences.",
             },
         ]
@@ -76,12 +74,12 @@ def analyze_image(base64_image: str, script: list[dict]) -> str:
 def play_audio(text: str) -> None:
     audio = generate(
         text=text,
-        voice=Voice(
-            voice_id="fTa66eq1WTYWiITP51ZV",
-            settings=VoiceSettings(
-                stability=0.6, similarity_boost=0.2, style=0.8, use_speaker_boost=True
-            ),
-        ),
+        # voice=Voice(
+        #     voice_id="fTa66eq1WTYWiITP51ZV",
+        #     settings=VoiceSettings(
+        #         stability=0.6, similarity_boost=0.2, style=0.8, use_speaker_boost=True
+        #     ),
+        # ),
     )
 
     play(audio)
